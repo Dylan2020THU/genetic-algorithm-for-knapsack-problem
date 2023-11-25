@@ -14,7 +14,7 @@ n = 70  # Number of items
 w_max = 100  # Weight capacity of backpack
 m = 100  # Number of chromosomes or solutions
 p = 0.5  # Probability of mutation
-t_max = 300  # Number of generations
+t_max = 100  # Number of generations
 
 # Generate random items
 items = np.zeros((n, 2))
@@ -109,6 +109,8 @@ plt.scatter(0, init_fitness_sort[-1], c='r', marker='o')
 plt.plot(list_best_chromosom_fitness, c='b', marker='^')
 plt.xlabel("Generation")
 plt.ylabel("Best fitness")
+plt.legend(["Initial fitness", "Best fitness"])
+plt.savefig("GA for backpack problem.png")
 plt.show()
 
 

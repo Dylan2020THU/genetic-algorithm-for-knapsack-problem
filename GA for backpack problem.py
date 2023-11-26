@@ -1,5 +1,5 @@
 # Born: 2023-11-20
-# Update: 2023-11-25
+# Update: 2023-11-26
 # Dylan
 # Genetic algorithm for backpack problem
 
@@ -10,19 +10,42 @@ import matplotlib.pyplot as plt
 random.seed(2023)
 
 # Parameters
-n = 70  # Number of items
-w_max = 100  # Weight capacity of backpack
+file_path_c = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_c.txt'
+file_path_p = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_p.txt'
+file_path_w = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_w.txt'  # Replace with your actual file path
+file_path_s = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_s.txt'
+
+with open(file_path_c, 'r') as file:
+    capacity = int(file.read())
+
+n = 0  # the amount of objects
+# Open the file and read line by line
+with open(file_path_p, 'r') as file:
+    for line in file:
+        n += 1
+
+items = np.zeros((n, 2))
+# Open the file and read the lines
+with open(file_path_w, 'r') as file:
+    # Convert each line to an integer and store in a list
+    items[:, 0] = [int(line.strip()) for line in file]
+with open(file_path_p, 'r') as file:
+    # Convert each line to an integer and store in a list
+    items[:, 1] = [int(line.strip()) for line in file]
+
+with open(file_path_s, 'r') as file:
+    # Convert each line to an integer and store in a list
+    optima_sol = [int(line.strip()) for line in file]
+
 m = 100  # Number of chromosomes or solutions
 p = 0.5  # Probability of mutation
-t_max = 100  # Number of generations
+t_max = 30  # Number of generations
 
 # Generate random items
-items = np.zeros((n, 2))
-for i in range(n):
-    items[i, 0] = random.randint(1, 5)  # Weight
-    items[i, 1] = random.randint(100, 200)  # Value
-
-# print(items)
+# items = np.zeros((n, 2))
+# for i in range(n):
+#     items[i, 0] = random.randint(1, 5)  # Weight
+#     items[i, 1] = random.randint(100, 200)  # Value
 
 # Generate random chromosomes
 chromosomes = np.zeros((m, n))
@@ -35,8 +58,8 @@ fitness = np.zeros(m)
 for i in range(m):
     weight[i] = np.dot(chromosomes[i, :], items[:, 0])
     fitness[i] = np.dot(chromosomes[i, :], items[:, 1])
-    # judge if weight is over w_max
-    if weight[i] > w_max:
+    # judge if weight is over capacity
+    if weight[i] > capacity:
         fitness[i] = 0
 # Sort chromosomes by fitness
 idx = np.argsort(fitness)  # Get indices of sorted chromosomes
@@ -90,8 +113,8 @@ for t in range(t_max):
     for i in range(m):
         weight[i] = np.dot(chromosomes[i, :], items[:, 0])
         fitness[i] = np.dot(chromosomes[i, :], items[:, 1])
-        # judge if weight is over w_max
-        if weight[i] > w_max:
+        # judge if weight is over capacity
+        if weight[i] > capacity:
             fitness[i] = 0
     # Sort chromosomes by fitness
     idx = np.argsort(fitness)  # Get indices of sorted chromosomes
@@ -102,6 +125,8 @@ for t in range(t_max):
     list_best_chromosom_fitness[t] = fitness_sort[-1]
 
     print("Best fitness: ", fitness_sort[-1])
+print("Allocation scheme: ", chromosomes_sort[-1])
+print('Offical optima: ', optima_sol)
 
 # Plot best fitness
 plt.figure()
@@ -112,5 +137,3 @@ plt.ylabel("Best fitness")
 plt.legend(["Initial fitness", "Best fitness"])
 plt.savefig("GA for backpack problem.png")
 plt.show()
-
-

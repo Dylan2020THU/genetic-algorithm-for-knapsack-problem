@@ -121,6 +121,13 @@ if __name__ == "__main__":
     with open(file_path_s, 'r') as file:
         optima_sol = [int(line.strip()) for line in file]
 
+    optima_value = np.dot(optima_sol, items[:,1])
+    print("Capacity: ", capacity)
+    print("Value: ", items[:,1])
+    print("Weight: ", items[:,0])
+    print("Optimal selection: ", optima_sol)
+    print("Optimal value:", optima_value)
+
     # Generate random items
     # items = np.zeros((num_item, 2))
     # for i in range(num_item):
@@ -158,9 +165,10 @@ if __name__ == "__main__":
     plt.figure()
     plt.scatter(0, init_sol, c='r', marker='o')
     plt.plot(ga_fitness_list, c='b', marker='*')
-    plt.plot(random_fitness_list, c='k', marker='^')
+    plt.plot(random_fitness_list, c='g', marker='^')
+    plt.plot(optima_value)
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
-    plt.legend(["Initial fitness", "GA fitness", "Random fitness"])
+    plt.legend(["Initial fitness", "GA fitness", "Random fitness", "Maximum"])
     plt.savefig("GA for backpack problem.png")
     plt.show()

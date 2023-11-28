@@ -6,6 +6,7 @@
 import random
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 def ga(m, p, t_max):
@@ -95,10 +96,11 @@ if __name__ == "__main__":
     random.seed(2023)
 
     # Problem settings
-    file_path_c = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_c.txt'
-    file_path_p = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_p.txt'
-    file_path_w = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_w.txt'  # Replace with your actual file path
-    file_path_s = r'C:\Users\Administrator\Desktop\genetic-algorithm-for-V2X-resource-allocation-main\p01\p01_s.txt'
+    dirname = os.path.dirname(__file__)
+    file_path_c = os.path.join(dirname, 'p04\p04_c.txt')
+    file_path_p = os.path.join(dirname, 'p04\p04_p.txt')
+    file_path_w = os.path.join(dirname, 'p04\p04_w.txt')  # Replace with your actual file path
+    file_path_s = os.path.join(dirname, 'p04\p04_s.txt')
 
     # Load the capacity
     with open(file_path_c, 'r') as file:
@@ -159,14 +161,14 @@ if __name__ == "__main__":
             if random_weight[i] > capacity:
                 random_fitness[i] = 0
         random_fitness_list[t] = np.average(random_fitness)
-        print(f"{t}-th random fitness: ", random_fitness_list[t])
+        # print(f"{t}-th random fitness: ", random_fitness_list[t])
 
     # Plot the fitness
     plt.figure()
     plt.scatter(0, init_sol, c='r', marker='o')
     plt.plot(ga_fitness_list, c='b', marker='*')
     plt.plot(random_fitness_list, c='g', marker='^')
-    plt.plot(optima_value)
+    plt.axhline(y=optima_value, color='k', linestyle='-')
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
     plt.legend(["Initial fitness", "GA fitness", "Random fitness", "Maximum"])

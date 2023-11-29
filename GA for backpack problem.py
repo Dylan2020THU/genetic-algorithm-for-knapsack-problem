@@ -9,168 +9,111 @@ import matplotlib.pyplot as plt
 import os
 
 
-def ga(m, p, t_max):
-    # Generate random chromosomes
-    chromosomes = np.zeros((m, num_item))
-    for i in range(m):
-        chromosomes[i, :] = np.random.randint(2, size=num_item)
+def initialize_population(m, num_items):
+    return np.random.randint(2, size=(m, num_items))
 
-    # Calculate fitness and weight of chromosomes
-    weight = np.zeros(m)
-    fitness = np.zeros(m)
-    for i in range(m):
-        weight[i] = np.dot(chromosomes[i, :], items[:, 0])
-        fitness[i] = np.dot(chromosomes[i, :], items[:, 1])
-        # judge if weight is over capacity
-        if weight[i] > capacity:
-            fitness[i] = 0
-    # Sort chromosomes by fitness
-    idx = np.argsort(fitness)  # Get indices of sorted chromosomes
-    chromosomes_sort = chromosomes[idx, :]  # Sort chromosomes
-    init_fitness_sort = fitness[idx]  # Sort fitness
-    weight_sort = weight[idx]  # Sort weight
 
-    print('Initial fitness:\n', init_fitness_sort)
+def calculate_fitness(chromosomes, items, capacity):
+    weight = np.dot(chromosomes, items[:, 0])
+    fitness = np.dot(chromosomes, items[:, 1])
+    fitness[weight > capacity] = 0
+    return fitness, weight
 
-    fitness_list = np.empty(t_max)
-    # start with an initial time t = 0
+
+def crossover(chromosomes, size_best):
+    new_population = np.zeros_like(chromosomes) # Create a new population with the same size as the initial population
+    for i in range(len(chromosomes)):
+        parent1, parent2 = random.sample(range(size_best), 2)
+        crossover_point = random.randint(0, len(chromosomes[i]))
+        new_population[i, :crossover_point] = chromosomes[parent1, :crossover_point]
+        new_population[i, crossover_point:] = chromosomes[parent2, crossover_point:]
+
+    return new_population
+
+
+def mutate(chromosomes, p):
+    mutation_mask = np.random.rand(*chromosomes.shape) < p # Create a mask for mutation
+    return chromosomes ^ mutation_mask
+
+
+def genetic_algorithm(m, p, t_max, items, capacity):
+    '''
+    Args:
+        m: number of choromosome
+        p: probability of mutation
+        t_max: number of generation
+        items: 2-dimensional variable: weight and value
+        capacity: knapsack capacity
+
+    Returns:
+    '''
+    population = initialize_population(m, len(items))
+    fitness_list = []
+
     for t in range(t_max):
-        print("Generation: ", t + 1)
-        # generate a new population with the same size as the initial population
-        chromosomes_new = np.zeros((m, num_item))  # m chromosomes with n genes in each chromosome
+        # fitness, _ = calculate_fitness(population, items, capacity)
+        # sorted_indices = np.argsort(fitness)[::-1]  # Sort in descending order
+        # population = population[sorted_indices]
+        # fitness_list.append(fitness[sorted_indices][0])
 
-        # Crossover
-        for i in range(m):
-            # Select a sub-population for offspring production
-            # Select the best 20 chromosomes
-            size_best = 20
-            chromosomes_best = chromosomes_sort[-size_best:, :]
-            # repeat the crossover to get the new population using the best 20 chromosomes
-            for j in range(size_best):
-                # randomly select two chromosomes from the best 20 chromosomes
-                idx_parent1 = random.randint(0, size_best - 1)
-                # select another parent chromosome except the first
-                best_list = list(range(size_best))
-                best_list.remove(idx_parent1)
-                idx_parent2 = random.choice(best_list)
-                # randomly select a crossover point
-                crossover_point = random.randint(0, num_item - 1)
-                # crossover
-                chromosomes_new[i, :crossover_point] = chromosomes_best[idx_parent1, :crossover_point]
-                chromosomes_new[i, crossover_point:] = chromosomes_best[idx_parent2, crossover_point:]
+        population = crossover(population, 20) # Select the best 10 chromosomes
+        population = mutate(population, p)
 
-        # Mutation
-        # randomly select a chromosome
-        for i in range(m):
-            # randomly select a gene
-            d = random.randint(0, num_item - 1)
-            # mutation
-            if random.random() < p:
-                chromosomes_new[i, d] = 1 - chromosomes_new[i, d]
-        # Update chromosomes
-        chromosomes = chromosomes_new
+        fitness, _ = calculate_fitness(population, items, capacity)
+        sorted_indices = np.argsort(fitness)[::-1]  # Sort in descending order
+        population = population[sorted_indices]
+        fitness_list.append(fitness[sorted_indices][0])
 
-        # Calculate and sort fitness of chromosomes in the new population
-        weight = np.zeros(m)
-        fitness = np.zeros(m)
-        for i in range(m):
-            weight[i] = np.dot(chromosomes[i, :], items[:, 0])
-            fitness[i] = np.dot(chromosomes[i, :], items[:, 1])
-            # judge if weight is over capacity
-            if weight[i] > capacity:
-                fitness[i] = 0
-        # Sort chromosomes by fitness
-        idx = np.argsort(fitness)  # Get indices of sorted chromosomes
-        chromosomes_sort = chromosomes[idx, :]  # Sort chromosomes
-        fitness_sort = fitness[idx]  # Sort fitness
-        weight_sort = weight[idx]  # Sort weight
-
-        fitness_list[t] = fitness_sort[-1]
-
-        print(f"{t + 1}-th GA fitness: ", fitness_sort[-1])
-    return init_fitness_sort[-1], chromosomes_sort[-1], fitness_list
+    return fitness_list, population[0]
 
 
 if __name__ == "__main__":
-
     random.seed(2023)
 
-    # Problem settings
+    # Load data from files
     dirname = os.path.dirname(__file__)
-    file_path_c = os.path.join(dirname, 'p04\p04_c.txt')
-    file_path_p = os.path.join(dirname, 'p04\p04_p.txt')
-    file_path_w = os.path.join(dirname, 'p04\p04_w.txt')  # Replace with your actual file path
-    file_path_s = os.path.join(dirname, 'p04\p04_s.txt')
+    idx_dataset = 4
+    file_path_c = os.path.join(dirname, f'p0{idx_dataset}/p0{idx_dataset}_c.txt')
+    file_path_p = os.path.join(dirname, f'p0{idx_dataset}/p0{idx_dataset}_p.txt')
+    file_path_w = os.path.join(dirname, f'p0{idx_dataset}/p0{idx_dataset}_w.txt')
+    file_path_s = os.path.join(dirname, f'p0{idx_dataset}/p0{idx_dataset}_s.txt')
 
-    # Load the capacity
-    with open(file_path_c, 'r') as file:
-        capacity = int(file.read())
+    capacity = int(open(file_path_c, 'r').read())
+    items = np.column_stack((
+        np.loadtxt(file_path_w, dtype=int),
+        np.loadtxt(file_path_p, dtype=int)
+    ))
+    optima_sol = np.loadtxt(file_path_s, dtype=int)
+    optima_value = np.dot(optima_sol, items[:, 1])
 
-    # Load the amount of objects
-    num_item = 0
-    with open(file_path_p, 'r') as file:  # Open the file and read the lines
-        for line in file:
-            num_item += 1
+    num_chromosome = 300
+    prob_mutation = 0.1
+    generation_max = 20
 
-    # Load the values and weights of items
-    items = np.zeros((num_item, 2))
-    with open(file_path_w, 'r') as file:
-        items[:, 0] = [int(line.strip()) for line in file]  # Convert each line to an integer and store in a list
-    with open(file_path_p, 'r') as file:
-        items[:, 1] = [int(line.strip()) for line in file]
+    fitness_list, ga_sol = genetic_algorithm(num_chromosome, prob_mutation, generation_max, items, capacity)
 
-    # Load the optimal solution
-    with open(file_path_s, 'r') as file:
-        optima_sol = [int(line.strip()) for line in file]
-
-    optima_value = np.dot(optima_sol, items[:,1])
     print("Capacity: ", capacity)
-    print("Value: ", items[:,1])
-    print("Weight: ", items[:,0])
+    print("Value: ", items[:, 1])
+    print("Weight: ", items[:, 0])
     print("Optimal selection: ", optima_sol)
     print("Optimal value:", optima_value)
+    print("GA selection: ", ga_sol)
+    print('GA value: ', np.dot(ga_sol, items[:, 1]))
 
-    # Generate random items
-    # items = np.zeros((num_item, 2))
-    # for i in range(num_item):
-    #     items[i, 0] = random.randint(1, 5)  # Weight
-    #     items[i, 1] = random.randint(100, 200)  # Value
-
-    # GA fitness
-    num_chromosome = 100  # Number of chromosomes or solutions
-    prob_mutation = 0.05  # Probability of mutation
-    generation_max = 30  # Number of generations
-
-    init_sol, ga_sol, ga_fitness_list = ga(num_chromosome, prob_mutation, generation_max)
-
-    print("Allocation scheme: ", ga_sol)
-    print('Offical optima: ', optima_sol)
-
-    # Random fitness
-    random_fitness_list = np.empty(shape=generation_max)
+    random_fitness_list = []
     for t in range(generation_max):
-        # Generate random chromosomes
-        random_chromosomes = np.zeros((num_chromosome, num_item))
-        random_weight = np.zeros(num_chromosome)
-        random_fitness = np.zeros(num_chromosome)
-        for i in range(num_chromosome):
-            random_chromosomes[i, :] = np.random.randint(2, size=num_item)
-            random_fitness[i] = np.dot(random_chromosomes[i, :], items[:, 1])
-            random_weight[i] = np.dot(random_chromosomes[i, :], items[:, 0])
-            # judge if weight is over capacity
-            if random_weight[i] > capacity:
-                random_fitness[i] = 0
-        random_fitness_list[t] = np.average(random_fitness)
-        # print(f"{t}-th random fitness: ", random_fitness_list[t])
+        random_population = initialize_population(num_chromosome, len(items))
+        random_fitness, _ = calculate_fitness(random_population, items, capacity)
+        random_fitness_list.append(np.mean(random_fitness))
 
     # Plot the fitness
     plt.figure()
-    plt.scatter(0, init_sol, c='r', marker='o')
-    plt.plot(ga_fitness_list, c='b', marker='*')
+    plt.scatter(0, fitness_list[0], c='r', marker='o')
+    plt.plot(fitness_list, c='b', marker='*')
     plt.plot(random_fitness_list, c='g', marker='^')
     plt.axhline(y=optima_value, color='k', linestyle='-')
     plt.xlabel("Generation")
     plt.ylabel("Fitness")
     plt.legend(["Initial fitness", "GA fitness", "Random fitness", "Maximum"])
-    plt.savefig("GA for backpack problem.png")
+    plt.savefig("GA_for_backpack_problem.png")
     plt.show()
